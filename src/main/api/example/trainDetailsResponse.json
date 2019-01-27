@@ -1,0 +1,47 @@
+{
+	"trains": [{
+		"trainNo": "12121",
+		"trainName": "Pune Express",
+		"travelDays": ["Mon", "Wed", "Fri"],
+		"origin": "Pune",
+		"boardingStation": "Pune",
+		"destination": "Nagpur",
+		"departure": "11:35",
+		"arrival": "20:25",
+		"seats": [{
+			"3Ac": "60",
+			"2Ac": "40",
+			"1Ac": "0",
+			"sleeper": "300",
+			"date": "24-01-2019"
+		}, {
+			"3Ac": "60",
+			"2Ac": "50",
+			"1Ac": "0",
+			"sleeper": "350",
+			"date": "26-01-2019"
+		}]
+	}, {
+		"trainNo": "12341",
+		"trainName": "Mumbai Express",
+		"travelDays": ["Sun", "Fri"],
+		"origin": "Mumbai",
+		"boardingStation": "Pune",
+		"destination": "Nagpur",
+		"departure": "13:12",
+		"arrival": "20:16",
+		"seats": [{
+			"3Ac": "75",
+			"2Ac": "26",
+			"1Ac": "0",
+			"sleeper": "342",
+			"date": "24-01-2019"
+		}, {
+			"3Ac": "70",
+			"2Ac": "43",
+			"1Ac": "0",
+			"sleeper": "240",
+			"date": "26-01-2019"
+		}]
+	}]
+}

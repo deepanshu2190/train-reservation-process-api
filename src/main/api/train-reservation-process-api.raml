@@ -1,0 +1,11 @@
+#%RAML 1.0
+baseUri: localhost:8022/api/train
+title: Sample API
+/seatfinder:
+  get:
+    responses:
+      '200':
+        description: Train Details
+        body:
+          application/json: 
+            example: !include example/trainDetailsResponse.json
