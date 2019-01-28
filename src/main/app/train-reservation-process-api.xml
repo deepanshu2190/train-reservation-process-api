@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
     <http:listener-config name="train-reservation-process-api-httpListenerConfig" host="localhost" port="8019" doc:name="HTTP Listener Configuration"/>
     <apikit:config name="train-reservation-process-api-config" raml="train-reservation-process-api.raml" consoleEnabled="false" doc:name="Router"/>
     <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8020" doc:name="HTTP Request Configuration"/>
@@ -17,7 +18,26 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
     </flow>
     <flow name="get:/seatfinder:train-reservation-process-api-config">
         <byte-array-to-string-transformer doc:name="Byte Array to String"/>
-        <http:request config-ref="HTTP_Request_Configuration" path="/api/*" method="GET" doc:name="HTTP"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/api/*" method="GET" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-params expression="#[message.inboundProperties.'http.query.params'.origin]"/>
+                <http:query-params expression="#[message.inboundProperties.'http.query.params'.destination]"/>
+                <http:query-params expression="#[message.inboundProperties.'http.query.params'.date]"/>
+            </http:request-builder>
+        </http:request>
+        <set-variable variableName="origin" value="" doc:name="setOrigin"/>
+        <set-variable variableName="destination" value="" doc:name="setDestination"/>
+        <set-variable variableName="date" value="" doc:name="setDate"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload map {
+	origin:$.origin,
+	destination:$.destination,
+	date:$.date
+} filter $.date=="04/02/2019"]]></dw:set-payload>
+        </dw:transform-message>
 
     </flow>
     <apikit:mapping-exception-strategy name="train-reservation-process-api-apiKitGlobalExceptionMapping">

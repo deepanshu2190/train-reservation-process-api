@@ -3,6 +3,10 @@ baseUri: localhost:8022/api/train
 title: Sample API
 /seatfinder:
   get:
+    queryParameters:
+      origin:
+      destination:
+      date:
     responses:
       '200':
         description: Train Details
