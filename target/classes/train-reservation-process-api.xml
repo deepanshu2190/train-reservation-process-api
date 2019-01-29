@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
@@ -7,7 +7,29 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
     <http:listener-config name="train-reservation-process-api-httpListenerConfig" host="localhost" port="8019" doc:name="HTTP Listener Configuration"/>
     <apikit:config name="train-reservation-process-api-config" raml="train-reservation-process-api.raml" consoleEnabled="false" doc:name="Router"/>
     <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8020" doc:name="HTTP Request Configuration"/>
-     <flow name="train-reservation-process-api-main">
+
+            <configuration doc:name="Configuration">
+	<expression-language>
+		<import class="DateToDay" />
+		<global-functions>
+    def dateToDay(formattedDate) {
+    return DateToDay.dateToDay(formattedDate);
+    }
+   </global-functions>
+	</expression-language>
+</configuration>
+
+   <configuration doc:name="Configuration">
+	<expression-language>
+		<import class="DateToDay" />
+		<global-functions>
+    def dateToDay(formattedDate) {
+    return DateToDay.dateToDay(formattedDate);
+    }
+   </global-functions>
+	</expression-language>
+</configuration>
+    <flow name="train-reservation-process-api-main">
         <http:listener config-ref="train-reservation-process-api-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
         <apikit:router config-ref="train-reservation-process-api-config" doc:name="APIkit Router"/>
         <exception-strategy ref="train-reservation-process-api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
@@ -29,16 +51,21 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
         <set-variable variableName="destination" value="" doc:name="setDestination"/>
         <set-variable variableName="date" value="" doc:name="setDate"/>
         <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data\json_1.json"/>
             <dw:set-payload><![CDATA[%dw 1.0
-%output application/java
+%output application/json
 ---
-payload map {
-	origin:$.origin,
-	destination:$.destination,
-	date:$.date
-} filter $.date=="04/02/2019"]]></dw:set-payload>
+{filteredTrain : payload.trains filter ($.trainno == "13201")}]]></dw:set-payload>
         </dw:transform-message>
-
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%var dateSample="04/01/2019"
+---
+{
+	day : dateToDay(dateSample)
+}]]></dw:set-payload>
+        </dw:transform-message>
     </flow>
     <apikit:mapping-exception-strategy name="train-reservation-process-api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
@@ -66,5 +93,6 @@ payload map {
             <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
             <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
         </apikit:mapping>
-    </apikit:mapping-exception-strategy>
+            </apikit:mapping-exception-strategy>
+            
 </mule>
