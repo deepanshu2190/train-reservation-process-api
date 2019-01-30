@@ -36,6 +36,7 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
         <set-variable variableName="destination" value="#[message.inboundProperties.'http.query.params'.destination]" doc:name="setDestination"/>
         <flow-ref name="callSystemApi-Sub_Flow" doc:name="callSystemApi-Sub_Flow"/>
         <flow-ref name="filterTrainListByDaySub_Flow" doc:name="filterTrainListByDaySub_Flow"/>
+        <flow-ref name="getseatDetailsSub_Flow" doc:name="getseatDetailsSub_Flow"/>
         <!-- <http:request config-ref="HTTP_Request_Configuration" path="/api/*" method="GET" doc:name="HTTP">
             <http:request-builder>
                 <http:query-params expression="#[message.inboundProperties.'http.query.params'.origin]"/>
@@ -79,6 +80,11 @@ otherwise "No Trains Found On This Day"
 }]]></dw:set-payload>
         </dw:transform-message>
         <logger message="#[payload]" level="INFO" doc:name="logFilterTrains"/>
+    </sub-flow>
+    <sub-flow name="getseatDetailsSub_Flow">
+        <foreach collection="payload.trains" doc:name="For Each">
+            <logger message="Deepanshu #[flowVars.counter]" level="INFO" doc:name="logCounter"/>
+        </foreach>
     </sub-flow>
     <apikit:mapping-exception-strategy name="train-reservation-process-api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
