@@ -6,29 +6,20 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
     <http:listener-config name="train-reservation-process-api-httpListenerConfig" host="localhost" port="8019" doc:name="HTTP Listener Configuration"/>
     <apikit:config name="train-reservation-process-api-config" raml="train-reservation-process-api.raml" consoleEnabled="false" doc:name="Router"/>
-    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8020" doc:name="HTTP Request Configuration"/>
-
-            <configuration doc:name="Configuration">
-	<expression-language>
-		<import class="DateToDay" />
-		<global-functions>
-    def dateToDay(formattedDate) {
-    return DateToDay.dateToDay(formattedDate);
-    }
-   </global-functions>
-	</expression-language>
-</configuration>
-
+  <!--   <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8020" doc:name="HTTP Request Configuration"/>
+ -->
+          
    <configuration doc:name="Configuration">
 	<expression-language>
-		<import class="DateToDay" />
+		<import class="com.util.converter.DateToDay" />
 		<global-functions>
     def dateToDay(formattedDate) {
-    return DateToDay.dateToDay(formattedDate);
+    return com.util.converter.DateToDay.dateToDay(formattedDate);
     }
    </global-functions>
 	</expression-language>
 </configuration>
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8020" doc:name="HTTP Request Configuration"/>
     <flow name="train-reservation-process-api-main">
         <http:listener config-ref="train-reservation-process-api-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
         <apikit:router config-ref="train-reservation-process-api-config" doc:name="APIkit Router"/>
@@ -40,7 +31,12 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
     </flow>
     <flow name="get:/seatfinder:train-reservation-process-api-config">
         <byte-array-to-string-transformer doc:name="Byte Array to String"/>
-        <http:request config-ref="HTTP_Request_Configuration" path="/api/*" method="GET" doc:name="HTTP">
+        <set-variable variableName="formattedDate" value="#[message.inboundProperties.'http.query.params'.date]" doc:name="setDate"/>
+        <set-variable variableName="origin" value="#[message.inboundProperties.'http.query.params'.origin]" doc:name="setOrigin"/>
+        <set-variable variableName="destination" value="#[message.inboundProperties.'http.query.params'.destination]" doc:name="setDestination"/>
+        <flow-ref name="callSystemApi-Sub_Flow" doc:name="callSystemApi-Sub_Flow"/>
+        <flow-ref name="filterTrainListByDaySub_Flow" doc:name="filterTrainListByDaySub_Flow"/>
+        <!-- <http:request config-ref="HTTP_Request_Configuration" path="/api/*" method="GET" doc:name="HTTP">
             <http:request-builder>
                 <http:query-params expression="#[message.inboundProperties.'http.query.params'.origin]"/>
                 <http:query-params expression="#[message.inboundProperties.'http.query.params'.destination]"/>
@@ -49,24 +45,41 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
         </http:request>
         <set-variable variableName="origin" value="" doc:name="setOrigin"/>
         <set-variable variableName="destination" value="" doc:name="setDestination"/>
-        <set-variable variableName="date" value="" doc:name="setDate"/>
-        <dw:transform-message doc:name="Transform Message">
+        <set-variable variableName="date" value="" doc:name="setDate"/> -->
+        <!-- <dw:transform-message doc:name="Transform Message">
             <dw:input-payload doc:sample="sample_data\json_1.json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
----
+- - -
 {filteredTrain : payload.trains filter ($.trainno == "13201")}]]></dw:set-payload>
-        </dw:transform-message>
-        <dw:transform-message doc:name="Transform Message">
+        </dw:transform-message> -->
+
+    </flow>
+    <sub-flow name="callSystemApi-Sub_Flow">
+        <http:request config-ref="HTTP_Request_Configuration" path="/api/train/trainList" method="GET" doc:name="getListOfTrains">
+            <http:request-builder>
+                <http:query-param paramName="origin" value="#[flowVars.origin]"/>
+                <http:query-param paramName="destination" value="#[flowVars.destination]"/>
+            </http:request-builder>
+        </http:request>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <logger message="#[payload]" level="INFO" doc:name="logListOfTrains"/>
+    </sub-flow>
+    <sub-flow name="filterTrainListByDaySub_Flow">
+        <dw:transform-message doc:name="filterTrainListByDay">
+            <dw:input-payload doc:sample="sample_data\json_2.json"/>
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/json
-%var dateSample="04/01/2019"
+%var day = dateToDay(flowVars.formattedDate)
 ---
 {
-	day : dateToDay(dateSample)
+	trains: payload.trains filter ((upper $.traveldays) == day)
+	when ( (payload.trains filter ((upper $.traveldays) == day))[0] != null)
+otherwise "No Trains Found On This Day"
 }]]></dw:set-payload>
         </dw:transform-message>
-    </flow>
+        <logger message="#[payload]" level="INFO" doc:name="logFilterTrains"/>
+    </sub-flow>
     <apikit:mapping-exception-strategy name="train-reservation-process-api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />

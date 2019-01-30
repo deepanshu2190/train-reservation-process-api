@@ -1,0 +1,30 @@
+{  "trains": [
+    {
+      "destination": "Chennai",
+      "seats": null,
+      "depart": "2:50",
+      "trainname": "South Express",
+      "origin": "New Delhi",
+      "trainno": 12412,
+      "traveldays": "Mon"
+    },
+    {
+      "destination": "Chennai",
+      "seats": null,
+      "depart": "18:40",
+      "trainname": "GT Express",
+      "origin": "New Delhi",
+      "trainno": 12616,
+      "traveldays": "All Days"
+    },
+    {
+      "destination": "Chennai",
+      "seats": null,
+      "depart": "13:20",
+      "trainname": "Chennai Express",
+      "origin": "New Delhi",
+      "trainno": 13201,
+      "traveldays": "Mon"
+    }
+  ]
+}
